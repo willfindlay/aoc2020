@@ -1,8 +1,10 @@
-/// My solutions to Day 1 of Advent of Code 2020.
-/// The challenge is available here: https://adventofcode.com/2020/day/1
+//! My solutions to Day 1 of Advent of Code 2020.
+//! The challenge is available here: https://adventofcode.com/2020/day/1
+
+use std::error::Error;
 use std::io::{stdin, Read};
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 fn main() -> Result<()> {
     let mut input = String::new();
@@ -40,7 +42,8 @@ fn part1(input: &str) -> Result<()> {
             }
         }
     }
-    return Ok(());
+
+    panic!("Bad input")
 }
 
 /// Parse a list of integers, separate by new lines.
@@ -84,5 +87,6 @@ fn part2(input: &str) -> Result<()> {
             }
         }
     }
-    return Ok(());
+
+    panic!("Bad input")
 }
