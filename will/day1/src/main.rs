@@ -1,3 +1,5 @@
+/// My solutions to Day 1 of Advent of Code 2020.
+/// The challenge is available here: https://adventofcode.com/2020/day/1
 use std::io::{stdin, Read};
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -12,6 +14,10 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+/// Parse a list of integers, separate by new lines.
+/// Find two entries that sum to 2020 and return their product.
+///
+/// Runs in O(n^2) time.
 fn part1(input: &str) -> Result<()> {
     let mut numbers = vec![];
 
@@ -37,6 +43,13 @@ fn part1(input: &str) -> Result<()> {
     return Ok(());
 }
 
+/// Parse a list of integers, separate by new lines.
+/// Find three entries that sum to 2020 and return their product.
+///
+/// A clever optimization here involves sorting the list before searching.
+/// We can sort in O(nlogn) time and search in O(n^2), rather than O(n^3).
+///
+/// Runs in O(n^2) time.
 fn part2(input: &str) -> Result<()> {
     let mut numbers = vec![];
 
