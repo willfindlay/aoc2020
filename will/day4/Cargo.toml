@@ -1,0 +1,9 @@
+[package]
+name = "day4"
+version = "0.1.0"
+authors = ["William Findlay <william@williamfindlay.com>"]
+edition = "2018"
+
+[dependencies]
+anyhow = "1.0.35"
+regex = "1.4.2"
