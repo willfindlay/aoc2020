@@ -27,13 +27,52 @@ pub fn input_generator(input: &str) -> Result<(Vec<Field>, Ticket, Vec<Ticket>)>
 
 #[aoc(day16, part1)]
 pub fn part1(input: &(Vec<Field>, Ticket, Vec<Ticket>)) -> Result<u32> {
-    println!("{:?}", input);
+    let (fields, own_ticket, nearby_tickets) = input;
+
+    let sum = nearby_tickets
+        .iter()
+        .map(|ticket| ticket.get_invalid(fields))
+        .flatten()
+        .sum();
+
+    Ok(sum)
+}
+
+#[aoc(day16, part2)]
+pub fn part2(input: &(Vec<Field>, Ticket, Vec<Ticket>)) -> Result<u32> {
+    let (fields, own_ticket, nearby_tickets) = input;
+
+    let mut valid: Vec<&Ticket> = nearby_tickets
+        .iter()
+        .filter(|ticket| ticket.get_invalid(fields).is_empty())
+        .collect();
+    valid.push(own_ticket);
+
+    let mut candidates: HashMap<u32, Vec<String>> = HashMap::new();
+    for ticket in valid {
+        for (i, value) in ticket.values.iter().enumerate() {
+            let entry = candidates
+                .entry(i as u32)
+                .or_insert(ticket.get_valid_field_names(i, fields));
+            let mut union: Vec<String> = entry
+                .iter()
+                .filter(|s| ticket.get_valid_field_names(i, fields).contains(s))
+                .map(|s| s.clone())
+                .collect();
+            union.sort();
+            union.dedup();
+            candidates.insert(i as u32, union);
+        }
+    }
+
+    println!("{:?}", candidates);
+
     todo!()
 }
 
 #[derive(Debug)]
 pub struct Ticket {
-    values: Vec<u32>,
+    pub values: Vec<u32>,
 }
 
 impl Ticket {
@@ -42,27 +81,56 @@ impl Ticket {
         Ticket { values }
     }
 
-    pub fn is_valid(&self, fields: &Vec<Field>, num: u32) -> bool {
-        for field in fields {
-            if field.is_valid(num) {
-                return true;
+    pub fn get_invalid(&self, fields: &Vec<Field>) -> Vec<u32> {
+        let mut invalid = vec![];
+        for value in self.values[..].iter() {
+            let mut valid = false;
+            for field in fields {
+                if field.is_valid(*value) {
+                    valid = true;
+                    break;
+                }
+            }
+            if !valid {
+                invalid.push(*value);
             }
         }
 
-        return false;
+        invalid
+    }
+
+    pub fn get_valid(&self, fields: &Vec<Field>) -> Vec<u32> {
+        let mut valid = vec![];
+        for value in self.values[..].iter() {
+            for field in fields {
+                if field.is_valid(*value) {
+                    valid.push(*value);
+                }
+            }
+        }
+
+        valid
+    }
+
+    pub fn get_valid_field_names(&self, pos: usize, fields: &Vec<Field>) -> Vec<String> {
+        fields
+            .iter()
+            .filter(|field| field.is_valid(*self.values.get(pos).unwrap()))
+            .map(|field| field.name.clone())
+            .collect()
     }
 }
 
 #[derive(Debug)]
 pub struct Field {
-    name: String,
+    pub name: String,
     ranges: Vec<(u32, u32)>,
 }
 
 impl Field {
     pub fn from_string(s: &str) -> Self {
         lazy_static! {
-            static ref NAME_RE: Regex = Regex::new(r"([a-z]+):").unwrap();
+            static ref NAME_RE: Regex = Regex::new(r"([a-z ]+):").unwrap();
             static ref RANGE_RE: Regex = Regex::new(r"(\d+)-(\d+)").unwrap();
         }
 
