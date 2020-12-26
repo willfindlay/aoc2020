@@ -1,6 +1,6 @@
 use anyhow::Result;
 use regex::Regex;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 #[aoc_generator(day16)]
 pub fn input_generator(input: &str) -> Result<(Vec<Field>, Ticket, Vec<Ticket>)> {
@@ -39,7 +39,7 @@ pub fn part1(input: &(Vec<Field>, Ticket, Vec<Ticket>)) -> Result<u32> {
 }
 
 #[aoc(day16, part2)]
-pub fn part2(input: &(Vec<Field>, Ticket, Vec<Ticket>)) -> Result<u32> {
+pub fn part2(input: &(Vec<Field>, Ticket, Vec<Ticket>)) -> Result<u64> {
     let (fields, own_ticket, nearby_tickets) = input;
 
     let mut valid: Vec<&Ticket> = nearby_tickets
@@ -48,26 +48,45 @@ pub fn part2(input: &(Vec<Field>, Ticket, Vec<Ticket>)) -> Result<u32> {
         .collect();
     valid.push(own_ticket);
 
-    let mut candidates: HashMap<u32, Vec<String>> = HashMap::new();
-    for ticket in valid {
-        for (i, value) in ticket.values.iter().enumerate() {
-            let entry = candidates
-                .entry(i as u32)
-                .or_insert(ticket.get_valid_field_names(i, fields));
-            let mut union: Vec<String> = entry
-                .iter()
-                .filter(|s| ticket.get_valid_field_names(i, fields).contains(s))
-                .map(|s| s.clone())
-                .collect();
-            union.sort();
-            union.dedup();
-            candidates.insert(i as u32, union);
+    // Get all candidates
+    let mut candidates: HashMap<String, HashSet<usize>> = fields
+        .iter()
+        .map(|field| {
+            (
+                field.name.clone(),
+                (0..own_ticket.values.len())
+                    .filter(|i| valid.iter().all(|t| field.is_valid(t.values[*i])))
+                    .collect(),
+            )
+        })
+        .collect();
+
+    // Pull out candiadtes into known as we find loners
+    let mut known: HashMap<String, usize> = HashMap::new();
+    while !candidates.is_empty() {
+        let (field_name, i) = candidates
+            .iter()
+            .filter(|(_, possible)| possible.len() == 1)
+            .map(|(f, i)| (f.clone(), *i.iter().next().unwrap()))
+            .next()
+            .unwrap();
+
+        candidates.remove(&field_name);
+        known.insert(field_name, i);
+
+        for c in candidates.values_mut() {
+            c.remove(&i);
         }
     }
 
-    println!("{:?}", candidates);
+    // Get the product
+    let product: u64 = known
+        .iter()
+        .filter(|(field_name, _)| field_name.starts_with("departure"))
+        .map(|(_, i)| own_ticket.values[*i] as u64)
+        .product();
 
-    todo!()
+    Ok(product)
 }
 
 #[derive(Debug)]
